@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const send = (type) => chrome.runtime.sendMessage({ type });
 let signedIn = false;
+let erpSignedIn = false;
 
 function show(r) {
   const el = $('status');
@@ -17,7 +18,13 @@ function show(r) {
   $('erp').className = !r.ok && r.action === 'erp' ? 'primary' : '';
 }
 
+function setErp(on) {
+  erpSignedIn = !!on;
+  $('erp').textContent = erpSignedIn ? 'Sign out of ERP' : 'Sign in to ERP';
+}
+
 function setSignedIn(st) {
+  setErp(st && st.erpSignedIn);
   signedIn = !!(st && st.signedIn);
   $('login').hidden = signedIn;
   $('sync').hidden = !signedIn;
@@ -74,6 +81,13 @@ $('sync').onclick = runSync;
 // Open ERP in a new tab; the background watches it and syncs once you are signed in.
 // Create the tab in the background first, tell the worker, then switch to it (the popup closes then).
 $('erp').onclick = async () => {
+  if (erpSignedIn) {
+    await send('erpLogout');
+    setErp(false);
+    $('status').className = '';
+    $('status').textContent = 'Signed out of ERP. Auto sync is paused until you sign in again.';
+    return;
+  }
   const tab = await chrome.tabs.create({ url: 'https://erp.usth.edu.vn/students/learn/timetable', active: false });
   await chrome.runtime.sendMessage({ type: 'watchErp', tabId: tab.id }).catch(() => {});
   chrome.tabs.update(tab.id, { active: true });

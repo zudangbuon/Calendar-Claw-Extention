@@ -9,7 +9,7 @@ const EXAM_COLOR = '11';            // red for exams
 const PERIOD_MIN = 6 * 60;          // re-sync every 6 hours while Chrome is open
 const RETRY_MIN = 30;               // transient errors (network...) -> retry after 30 minutes
 const MIN_GAP_MS = 60 * 60 * 1000;  // auto sync: skip if the last sync was < 1 hour ago
-const DEFAULTS = { auto: true, remind: 15, calendarId: '', lastCount: 0, lastSync: 0, lastResult: null };
+const DEFAULTS = { auto: true, remind: 15, erpSignedIn: null, calendarId: '', lastCount: 0, lastSync: 0, lastResult: null };
 
 let running = null;
 
@@ -67,6 +67,7 @@ function watchErpTab(tabId) {
       return;
     }
     if (loggedIn) {
+      await setCfg({ erpSignedIn: true });
       stop();
       syncNow({ auto: false }).catch(() => {});
     }
@@ -102,6 +103,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
     logout: logout,
     status: status,
     watchErp: () => { watchErpTab(msg.tabId); return Promise.resolve(true); },
+    erpLogout: erpLogout,
   };
   const h = msg && handlers[msg.type];
   if (!h) return;
@@ -131,8 +133,20 @@ async function getToken(interactive) {
 async function status() {
   const signedIn = !!(await getToken(false).catch(() => null));
   const info = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }).catch(() => ({}));
-  const { calendarId } = await getCfg();
-  return { signedIn, email: (info && info.email) || '', calendarId };
+  const { calendarId, erpSignedIn, lastResult } = await getCfg();
+  // Older installs have no stored ERP state yet: a successful last sync means ERP was signed in.
+  const erp = erpSignedIn !== null ? erpSignedIn : !!(lastResult && lastResult.ok);
+  return { signedIn, email: (info && info.email) || '', calendarId, erpSignedIn: erp };
+}
+
+// Sign out of ERP by clearing its cookies and site storage in this Chrome profile.
+async function erpLogout() {
+  await chrome.browsingData.remove(
+    { origins: ['https://erp.usth.edu.vn'] },
+    { cookies: true, localStorage: true, indexedDB: true, cacheStorage: true, serviceWorkers: true },
+  );
+  await setCfg({ erpSignedIn: false });
+  return true;
 }
 
 async function logout() {
@@ -231,7 +245,7 @@ async function extractFromErp() {
     await waitForLoad(tab.id, 30000);
     const t = await chrome.tabs.get(tab.id);
     const notLoggedIn = new UserError('Not signed in to USTH ERP (or the session expired). Click "Sign in to ERP"; it will sync automatically afterwards.', 'erp');
-    if (!t.url || !t.url.startsWith(ERP_URL)) throw notLoggedIn;
+    if (!t.url || !t.url.startsWith(ERP_URL)) { await setCfg({ erpSignedIn: false }); throw notLoggedIn; }
     await chrome.scripting.executeScript({ target: { tabId: tab.id }, world: 'MAIN', files: ['extractor.js'] });
 
     let last = null;
@@ -242,8 +256,8 @@ async function extractFromErp() {
         func: () => window.__extractUsthTkb(),
       });
       last = result;
-      if (result && result.ok) return result;
-      if (result && result.error === 'NOT_LOGGED_IN') throw notLoggedIn;
+      if (result && result.ok) { await setCfg({ erpSignedIn: true }); return result; }
+      if (result && result.error === 'NOT_LOGGED_IN') { await setCfg({ erpSignedIn: false }); throw notLoggedIn; }
       await sleep(2000); // page not ready yet, try again
     }
     throw new Error((last && last.message) || 'Could not read the timetable from ERP.');
