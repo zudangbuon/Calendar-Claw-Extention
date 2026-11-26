@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "USTH TKB to Google Calendar",
+  "version": "2.2.0",
+  "description": "Automatically syncs your USTH ERP timetable and exams to Google Calendar whenever Chrome starts.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxpOjgLlPzgc3bTSTQ/dmcEQ4NtBQU6mM4/cf+/R37wKwkxqZ4BlTL6pGIFNaLukg9CzHBsbNIq/tgGo2wRZn5sFYrbz+BpigSph7obk/qDQlYIfHVi8qdqSjLbMkLBoK09gJhGLwxX3eDcMTSvYk4V5pUY5wPFUzB0i8XTsxeisFOLWfCdep9qJ4mWrY1ep/2UF5F6hXuto+zQIH5z6kDKeHU7MFLiqmRv8CTWHfJt4aSXld9l3vgw2lPUQnd3xTxDjTULxWpISwZ27IZZFQzZDzJFQFGz0sv6/78rfXKi3DRVBrkn/4FTPAqxiUYd9c2vK+gTXxy82g+vKNDeR7ewIDAQAB",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "scripting",
+    "notifications",
+    "identity",
+    "identity.email"
+  ],
+  "host_permissions": [
+    "https://erp.usth.edu.vn/*",
+    "https://www.googleapis.com/*"
+  ],
+  "oauth2": {
+    "client_id": "95782835213-sg7vshpcu2mnu9crrf8aqvog493tgeiq.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar.app.created"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "USTH TKB",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  }
+}

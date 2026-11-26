@@ -1,0 +1,5 @@
+# Private key that determines the extension ID: never commit it, but keep it.
+*.pem
+*.crx
+*.zip
+*.ics

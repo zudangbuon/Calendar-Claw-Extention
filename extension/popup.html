@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 13px/1.45 system-ui, sans-serif; width: 340px; margin: 0; padding: 14px; color: #1f2328; }
+  h1 { font-size: 15px; margin: 0 0 10px; }
+  ol { margin: 0 0 8px; padding-left: 18px; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  button { flex: 1; padding: 7px; border: 1px solid #d0d7de; border-radius: 6px; background: #f6f8fa; cursor: pointer; font-weight: 600; color: inherit; }
+  button.primary { background: #1f883d; border-color: #1f883d; color: #fff; }
+  button:disabled { opacity: .6; cursor: default; }
+  #status { margin-top: 12px; padding: 8px; border-radius: 6px; background: #f6f8fa; white-space: pre-wrap; }
+  #status.ok { background: #dafbe1; } #status.err { background: #ffebe9; }
+  .opt { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+  select { padding: 3px; border: 1px solid #d0d7de; border-radius: 6px; }
+  #account { margin-top: 8px; color: #57606a; }
+  [hidden] { display: none !important; }
+  a { color: #0969da; }
+  small { color: #57606a; }
+</style>
+</head>
+<body>
+  <h1>USTH TKB to Google Calendar</h1>
+  <ol id="steps">
+    <li>Click "Sign in with Google" (the account that should receive the calendar).</li>
+    <li>Click "Sign in to ERP" and sign in with your USTH account. It syncs automatically afterwards.</li>
+  </ol>
+  <div class="row">
+    <button id="login" class="primary">Sign in with Google</button>
+    <button id="sync" class="primary" hidden>Sync now</button>
+    <button id="logout" hidden>Sign out</button>
+  </div>
+  <div class="row">
+    <button id="erp">Sign in to ERP</button>
+  </div>
+  <div id="account" hidden></div>
+  <label class="opt"><input id="auto" type="checkbox"> Sync automatically when Chrome starts and every 6 hours</label>
+  <label class="opt">Reminder before each session:
+    <select id="remind">
+      <option value="0">None</option>
+      <option value="10">10 minutes</option>
+      <option value="15">15 minutes</option>
+      <option value="30">30 minutes</option>
+      <option value="60">1 hour</option>
+    </select>
+  </label>
+  <div id="status">Not synced yet.</div>
+  <p><small>Sessions go into a separate "USTH TKB" calendar in your Google Calendar; other calendars are never touched. During a sync, ERP opens in a background tab for a few seconds and then closes. Exams are shown in red.</small></p>
+  <script src="popup.js"></script>
+</body>
+</html>
